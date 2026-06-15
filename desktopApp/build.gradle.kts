@@ -13,6 +13,7 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.lemon.focuspet.MainKt"
+        jvmArgs("-Dfile.encoding=GBK")
 
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
