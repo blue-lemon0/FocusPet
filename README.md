@@ -32,11 +32,17 @@ $env:JAVA_HOME = "C:\Users\xxx\.jdks\ms-17.0.18"
 
 ```
 FocusPet/
-└── desktopApp/src/main/kotlin/com/lemon/focuspet/
-    ├── Main.kt                    # 应用入口 + 窗口管理
-    ├── model/PetState.kt          # 宠物状态枚举
-    ├── viewmodel/PomodoroViewModel.kt  # 计时器 + 状态机
-    ├── ui/PetScreen.kt            # 宠物窗口界面
-    ├── util/DataStore.kt          # JSON 数据持久化
-    └── tray/TrayManager.kt        # 系统托盘
+├── desktopApp/src/main/kotlin/com/lemon/focuspet/
+│   └── Main.kt                # 应用入口 + 窗口管理 + 系统托盘
+└── shared/src/
+    ├── commonMain/kotlin/com/lemon/focuspet/
+    │   ├── model/PetState.kt          # 宠物状态枚举
+    │   ├── viewmodel/PomodoroViewModel.kt  # 计时器 + 状态机
+    │   ├── ui/PetScreen.kt            # 宠物窗口界面
+    │   └── util/
+    │       ├── DataStore.kt          # expect - 数据持久化
+    │       └── DesktopEnv.kt         # 桌面环境抽象接口
+    └── jvmMain/kotlin/com/lemon/focuspet/util/
+        ├── DataStore.kt              # actual - JSON 文件存储
+        └── DesktopEnvJvm.kt          # AWT 窗口操作实现
 ```

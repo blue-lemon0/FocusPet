@@ -1,9 +1,12 @@
 package com.lemon.focuspet
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
-import com.lemon.focuspet.tray.TrayManager
 import com.lemon.focuspet.ui.PetScreen
 import com.lemon.focuspet.util.DesktopEnvJvm
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
@@ -16,18 +19,31 @@ fun main() = application {
     LaunchedEffect(Unit) { viewModel.loadTotalMinutes() }
 
     DisposableEffect(Unit) {
-        onDispose { viewModel.dispose(); TrayManager.remove() }
+        onDispose { viewModel.dispose() }
     }
+
+    // ── Tray icon with Compose-rendered menu ──
+    val icon = remember {
+        object : Painter() {
+            override val intrinsicSize = Size(16f, 16f)
+            override fun DrawScope.onDraw() {
+                drawCircle(Color(0x22, 0x88, 0x22))
+            }
+        }
+    }
+
+    Tray(
+        icon = icon,
+        tooltip = "FocusPet",
+        onAction = { isWindowVisible = !isWindowVisible },
+        menu = {
+            Item("显示/隐藏", onClick = { isWindowVisible = !isWindowVisible })
+            Separator()
+            Item("退出", onClick = ::exitApplication)
+        }
+    )
 
     val windowState = rememberWindowState(width = 200.dp, height = 200.dp)
-
-    LaunchedEffect(Unit) {
-        TrayManager.setup(
-            appName = "FocusPet",
-            onToggleVisibility = { isWindowVisible = !isWindowVisible },
-            onExit = ::exitApplication
-        )
-    }
 
     Window(
         onCloseRequest = { isWindowVisible = false },
