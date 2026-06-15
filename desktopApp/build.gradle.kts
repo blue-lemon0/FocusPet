@@ -7,7 +7,10 @@ plugins {
 dependencies {
     implementation(projects.shared)
     implementation(compose.desktop.currentOs)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.foundation)
     implementation(libs.kotlinx.coroutines.swing)
+    implementation(libs.composenativetray)
 }
 
 compose.desktop {

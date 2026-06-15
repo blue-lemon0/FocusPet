@@ -1,28 +1,31 @@
 package com.lemon.focuspet
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import com.kdroid.composetray.menu.api.*
+import com.kdroid.composetray.tray.api.Tray
 import com.lemon.focuspet.ui.PetScreen
 import com.lemon.focuspet.util.DesktopEnvJvm
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
 import java.awt.Toolkit
+import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 
 fun main() = application {
     val viewModel = remember { PomodoroViewModel() }
     var isWindowVisible by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) { viewModel.loadTotalMinutes() }
-
     DisposableEffect(Unit) {
         onDispose { viewModel.dispose() }
     }
 
-    // ── Tray icon with Compose-rendered menu ──
+    // ── System tray (ComposeNativeTray) ──
     val icon = remember {
         object : Painter() {
             override val intrinsicSize = Size(16f, 16f)
@@ -35,16 +38,15 @@ fun main() = application {
     Tray(
         icon = icon,
         tooltip = "FocusPet",
-        onAction = { isWindowVisible = !isWindowVisible },
-        menu = {
-            Item("显示/隐藏", onClick = { isWindowVisible = !isWindowVisible })
-            Separator()
-            Item("退出", onClick = ::exitApplication)
-        }
+        primaryAction = { isWindowVisible = !isWindowVisible },
+        menuContent = {
+            Item(label = "显示/隐藏") { isWindowVisible = !isWindowVisible }
+            Item(label = "退出") { kotlin.system.exitProcess(0) }
+        },
     )
 
+    // ── Pet window ──
     val windowState = rememberWindowState(width = 200.dp, height = 200.dp)
-
     Window(
         onCloseRequest = { isWindowVisible = false },
         visible = isWindowVisible,
@@ -53,13 +55,12 @@ fun main() = application {
         transparent = true,
         alwaysOnTop = true,
         resizable = false,
-        title = "FocusPet"
+        title = "FocusPet",
     ) {
         val awtWindow = this.window
         val env = remember { DesktopEnvJvm(awtWindow) }
 
         LaunchedEffect(Unit) {
-            // Position at screen bottom-right
             val gc = awtWindow.graphicsConfiguration
             val bounds = gc.bounds
             val insets = Toolkit.getDefaultToolkit().getScreenInsets(gc)
@@ -67,10 +68,9 @@ fun main() = application {
             val y = (bounds.y + insets.top + bounds.height - insets.top - insets.bottom - 230).coerceAtLeast(0)
             awtWindow.setLocation(x, y)
 
-            // Focus tracking
-            awtWindow.addWindowFocusListener(object : java.awt.event.WindowFocusListener {
-                override fun windowGainedFocus(e: java.awt.event.WindowEvent) { viewModel.onFocusGained() }
-                override fun windowLostFocus(e: java.awt.event.WindowEvent) { viewModel.onFocusLost() }
+            awtWindow.addWindowFocusListener(object : WindowFocusListener {
+                override fun windowGainedFocus(e: WindowEvent?) { viewModel.onFocusGained() }
+                override fun windowLostFocus(e: WindowEvent?) { viewModel.onFocusLost() }
             })
         }
 
