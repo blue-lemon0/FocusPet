@@ -1,29 +1,46 @@
-This is a Kotlin Multiplatform project targeting Desktop (JVM).
+# FocusPet
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-    - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-    - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-      For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-      the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-      Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-      folder is the appropriate location.
+Kotlin Multiplatform Compose Desktop 桌面宠物应用，可在 Windows 上原生运行。
 
-### Running the apps
+## 环境要求
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and
-options:
+- **JDK 17+**（推荐使用 Microsoft OpenJDK 17）
+- Gradle 9.1+（由 wrapper 自动管理）
 
-- Desktop app:
-    - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-    - Standard run: `./gradlew :desktopApp:run`
+## 在 Windows 上运行
 
-### Running tests
+```powershell
+# 确保 JAVA_HOME 指向 JDK 17+
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+# 构建并运行桌面应用
+.\gradlew.bat :desktopApp:run
+```
 
-- Desktop tests: `./gradlew :shared:jvmTest`
+首次运行会自动下载 Gradle 和依赖项。之后可直接使用：
 
----
+```powershell
+.\gradlew.bat :desktopApp:run
+```
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## 项目结构
+
+```
+FocusPet/
+├── desktopApp/                  # 桌面应用入口
+│   └── src/main/kotlin/
+│       └── com/lemon/focuspet/
+│           └── main.kt          # application 入口点
+├── shared/                      # 跨平台共享代码
+│   └── src/
+│       ├── commonMain/          # 公共代码
+│       └── jvmMain/             # JVM/Desktop 平台特定代码
+├── build.gradle.kts
+├── settings.gradle.kts
+└── gradle/
+```
+
+## 运行测试
+
+```powershell
+.\gradlew.bat :shared:jvmTest
+```
