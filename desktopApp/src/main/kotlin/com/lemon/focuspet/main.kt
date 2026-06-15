@@ -1,14 +1,12 @@
 package com.lemon.focuspet
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.lemon.focuspet.tray.TrayManager
 import com.lemon.focuspet.ui.PetScreen
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
 import java.awt.Toolkit
-import kotlinx.coroutines.delay
 
 fun main() = application {
     val viewModel = remember { PomodoroViewModel() }
@@ -49,10 +47,9 @@ fun main() = application {
         title = "FocusPet"
     ) {
         val awtWindow = this.window
-        val density = LocalDensity.current
 
         LaunchedEffect(Unit) {
-            // Position window at screen bottom-right
+            // Position window at screen bottom-right (pixel coordinates)
             val gc = awtWindow.graphicsConfiguration
             val bounds = gc.bounds
             val insets = Toolkit.getDefaultToolkit().getScreenInsets(gc)
@@ -62,16 +59,10 @@ fun main() = application {
             val usableW = bounds.width - insets.left - insets.right
             val usableH = bounds.height - insets.top - insets.bottom
 
-            val xPx = usableX + usableW - 230
-            val yPx = usableY + usableH - 230
+            val xPx = (usableX + usableW - 230).coerceAtLeast(0)
+            val yPx = (usableY + usableH - 230).coerceAtLeast(0)
 
-            delay(100)
-            with(density) {
-                windowState.position = WindowPosition.Absolute(
-                    x = xPx.toDp().coerceAtLeast(0.dp),
-                    y = yPx.toDp().coerceAtLeast(0.dp)
-                )
-            }
+            awtWindow.setLocation(xPx, yPx)
 
             // Track window focus for pomodoro distraction detection
             awtWindow.addWindowFocusListener(object : java.awt.event.WindowFocusListener {
@@ -85,6 +76,6 @@ fun main() = application {
             })
         }
 
-        PetScreen(viewModel, windowState)
+        PetScreen(viewModel, awtWindow)
     }
 }

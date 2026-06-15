@@ -13,42 +13,46 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowState
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
+import java.awt.MouseInfo
+import java.awt.Window
 
 @Composable
-fun PetScreen(viewModel: PomodoroViewModel, windowState: WindowState) {
-    // Track window position for dragging (Dp because WindowPosition.Absolute uses Dp)
-    var windowX by remember { mutableStateOf(0.dp) }
-    var windowY by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
-
-    LaunchedEffect(Unit) {
-        val pos = windowState.position
-        if (pos is WindowPosition.Absolute) {
-            windowX = pos.x
-            windowY = pos.y
-        }
-    }
+fun PetScreen(viewModel: PomodoroViewModel, awtWindow: Window) {
+    // Use absolute mouse coordinates to avoid delta accumulation jitter
+    var dragOriginMouseX by remember { mutableIntStateOf(0) }
+    var dragOriginMouseY by remember { mutableIntStateOf(0) }
+    var dragOriginWindowX by remember { mutableIntStateOf(0) }
+    var dragOriginWindowY by remember { mutableIntStateOf(0) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent)
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    with(density) {
-                        windowX += dragAmount.x.toDp()
-                        windowY += dragAmount.y.toDp()
-                    }
-                    windowState.position = WindowPosition.Absolute(windowX, windowY)
-                }
+                detectDragGestures(
+                    onDragStart = {
+                        val pointer = MouseInfo.getPointerInfo()
+                        dragOriginMouseX = pointer.location.x
+                        dragOriginMouseY = pointer.location.y
+                        dragOriginWindowX = awtWindow.x
+                        dragOriginWindowY = awtWindow.y
+                    },
+                    onDrag = { change, _ ->
+                        change.consume()
+                        val pointer = MouseInfo.getPointerInfo()
+                        val dx = pointer.location.x - dragOriginMouseX
+                        val dy = pointer.location.y - dragOriginMouseY
+                        awtWindow.setLocation(
+                            dragOriginWindowX + dx,
+                            dragOriginWindowY + dy
+                        )
+                    },
+                    onDragEnd = { },
+                    onDragCancel = { }
+                )
             },
         contentAlignment = Alignment.Center
     ) {
