@@ -2,7 +2,7 @@ package com.lemon.focuspet.util
 
 import java.io.File
 
-object DataStore {
+actual object DataStore {
 
     private val dataDir: File
         get() = File(System.getProperty("user.home"), ".focuspet")
@@ -10,7 +10,7 @@ object DataStore {
     private val dataFile: File
         get() = File(dataDir, "data.json")
 
-    fun load(): Int {
+    actual fun load(): Int {
         return try {
             if (!dataFile.exists()) return 0
             val text = dataFile.readText()
@@ -21,7 +21,7 @@ object DataStore {
         }
     }
 
-    fun save(totalMinutes: Int) {
+    actual fun save(totalMinutes: Int) {
         try {
             dataDir.mkdirs()
             dataFile.writeText("""{"totalMinutes":$totalMinutes}""")

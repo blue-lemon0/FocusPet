@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.lemon.focuspet.tray.TrayManager
 import com.lemon.focuspet.ui.PetScreen
+import com.lemon.focuspet.util.DesktopEnvJvm
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
 import java.awt.Toolkit
 
@@ -12,22 +13,14 @@ fun main() = application {
     val viewModel = remember { PomodoroViewModel() }
     var isWindowVisible by remember { mutableStateOf(true) }
 
-    // Load persisted data
-    LaunchedEffect(Unit) {
-        viewModel.loadTotalMinutes()
-    }
+    LaunchedEffect(Unit) { viewModel.loadTotalMinutes() }
 
-    // Cleanup on exit
     DisposableEffect(Unit) {
-        onDispose {
-            viewModel.dispose()
-            TrayManager.remove()
-        }
+        onDispose { viewModel.dispose(); TrayManager.remove() }
     }
 
     val windowState = rememberWindowState(width = 200.dp, height = 200.dp)
 
-    // System tray setup
     LaunchedEffect(Unit) {
         TrayManager.setup(
             appName = "FocusPet",
@@ -47,35 +40,24 @@ fun main() = application {
         title = "FocusPet"
     ) {
         val awtWindow = this.window
+        val env = remember { DesktopEnvJvm(awtWindow) }
 
         LaunchedEffect(Unit) {
-            // Position window at screen bottom-right (pixel coordinates)
+            // Position at screen bottom-right
             val gc = awtWindow.graphicsConfiguration
             val bounds = gc.bounds
             val insets = Toolkit.getDefaultToolkit().getScreenInsets(gc)
+            val x = (bounds.x + insets.left + bounds.width - insets.left - insets.right - 230).coerceAtLeast(0)
+            val y = (bounds.y + insets.top + bounds.height - insets.top - insets.bottom - 230).coerceAtLeast(0)
+            awtWindow.setLocation(x, y)
 
-            val usableX = bounds.x + insets.left
-            val usableY = bounds.y + insets.top
-            val usableW = bounds.width - insets.left - insets.right
-            val usableH = bounds.height - insets.top - insets.bottom
-
-            val xPx = (usableX + usableW - 230).coerceAtLeast(0)
-            val yPx = (usableY + usableH - 230).coerceAtLeast(0)
-
-            awtWindow.setLocation(xPx, yPx)
-
-            // Track window focus for pomodoro distraction detection
+            // Focus tracking
             awtWindow.addWindowFocusListener(object : java.awt.event.WindowFocusListener {
-                override fun windowGainedFocus(e: java.awt.event.WindowEvent) {
-                    viewModel.onFocusGained()
-                }
-
-                override fun windowLostFocus(e: java.awt.event.WindowEvent) {
-                    viewModel.onFocusLost()
-                }
+                override fun windowGainedFocus(e: java.awt.event.WindowEvent) { viewModel.onFocusGained() }
+                override fun windowLostFocus(e: java.awt.event.WindowEvent) { viewModel.onFocusLost() }
             })
         }
 
-        PetScreen(viewModel, awtWindow)
+        PetScreen(viewModel, env)
     }
 }

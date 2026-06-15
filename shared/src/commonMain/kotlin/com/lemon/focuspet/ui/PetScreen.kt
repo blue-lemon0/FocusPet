@@ -15,12 +15,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lemon.focuspet.util.DesktopEnv
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
-import java.awt.MouseInfo
-import java.awt.Window
 
 @Composable
-fun PetScreen(viewModel: PomodoroViewModel, awtWindow: Window) {
+fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
     // Use absolute mouse coordinates to avoid delta accumulation jitter
     var dragOriginMouseX by remember { mutableIntStateOf(0) }
     var dragOriginMouseY by remember { mutableIntStateOf(0) }
@@ -34,18 +33,16 @@ fun PetScreen(viewModel: PomodoroViewModel, awtWindow: Window) {
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
-                        val pointer = MouseInfo.getPointerInfo()
-                        dragOriginMouseX = pointer.location.x
-                        dragOriginMouseY = pointer.location.y
-                        dragOriginWindowX = awtWindow.x
-                        dragOriginWindowY = awtWindow.y
+                        dragOriginMouseX = env.mouseScreenX
+                        dragOriginMouseY = env.mouseScreenY
+                        dragOriginWindowX = env.windowX
+                        dragOriginWindowY = env.windowY
                     },
                     onDrag = { change, _ ->
                         change.consume()
-                        val pointer = MouseInfo.getPointerInfo()
-                        val dx = pointer.location.x - dragOriginMouseX
-                        val dy = pointer.location.y - dragOriginMouseY
-                        awtWindow.setLocation(
+                        val dx = env.mouseScreenX - dragOriginMouseX
+                        val dy = env.mouseScreenY - dragOriginMouseY
+                        env.setWindowPosition(
                             dragOriginWindowX + dx,
                             dragOriginWindowY + dy
                         )

@@ -5,11 +5,8 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.shared)
     implementation(compose.desktop.currentOs)
-    @Suppress("DEPRECATION")
-    implementation(compose.material3)
-
-    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.swing)
 }
 

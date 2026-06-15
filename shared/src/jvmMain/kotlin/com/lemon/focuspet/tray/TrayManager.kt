@@ -3,11 +3,11 @@ package com.lemon.focuspet.tray
 import java.awt.*
 import java.awt.image.BufferedImage
 
-object TrayManager {
+actual object TrayManager {
 
     private var trayIcon: TrayIcon? = null
 
-    fun setup(appName: String, onToggleVisibility: () -> Unit, onExit: () -> Unit) {
+    actual fun setup(appName: String, onToggleVisibility: () -> Unit, onExit: () -> Unit) {
         if (!SystemTray.isSupported()) return
 
         val popup = PopupMenu()
@@ -21,7 +21,6 @@ object TrayManager {
         popup.addSeparator()
         popup.add(exitItem)
 
-        // Create a simple orange circle as tray icon
         val image = BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB)
         val g = image.createGraphics()
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
@@ -39,7 +38,7 @@ object TrayManager {
         }
     }
 
-    fun remove() {
+    actual fun remove() {
         try {
             trayIcon?.let { SystemTray.getSystemTray().remove(it) }
         } catch (_: Exception) {

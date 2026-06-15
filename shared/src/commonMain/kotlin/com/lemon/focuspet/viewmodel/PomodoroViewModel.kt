@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import com.lemon.focuspet.model.PetState
 import com.lemon.focuspet.util.DataStore
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Main
 
 class PomodoroViewModel {
 
@@ -31,7 +30,7 @@ class PomodoroViewModel {
         private set
 
     private var timerJob: Job? = null
-    private val scope = CoroutineScope(SupervisorJob() + Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     companion object {
         const val FOCUS_TIME = 25 * 60
@@ -50,27 +49,22 @@ class PomodoroViewModel {
         isRunning = true
 
         timerJob = scope.launch {
-            // Outer loop: handles focus→break→idle cycle
             while (isRunning) {
-                // Inner loop: countdown
                 while (remainingSeconds > 0 && isRunning) {
                     delay(1000)
                     remainingSeconds--
                     updatePetState()
                 }
 
-                if (!isRunning) break // user paused
+                if (!isRunning) break
 
-                // Timer reached zero → switch phase
                 if (!isBreak) {
-                    // Focus session completed
                     totalMinutes += 25
                     DataStore.save(totalMinutes)
                     isBreak = true
                     remainingSeconds = BREAK_TIME
                     petState = PetState.RESTING
                 } else {
-                    // Break completed → return to idle
                     isBreak = false
                     remainingSeconds = FOCUS_TIME
                     petState = PetState.HAPPY
