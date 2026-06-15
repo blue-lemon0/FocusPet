@@ -11,7 +11,7 @@
 | ⏱ 番茄钟 | 25分钟专注 / 5分钟休息，自动切换，支持开始/暂停/重置 |
 | 🔍 窗口失焦检测 | 切换到其他窗口超过5秒，宠物进入生气状态 |
 | 💾 数据持久化 | 累计专注分钟数保存到 `~/.focuspet/data.json` |
-| 🎛 系统托盘 | 右键菜单：显示/隐藏、退出 |
+| 🎛 系统托盘 | 原生托盘图标 + 右键菜单（显示/隐藏、退出） |
 
 ## 环境要求
 
@@ -27,6 +27,11 @@ $env:JAVA_HOME = "C:\Users\xxx\.jdks\ms-17.0.18"
 ```
 
 首次运行会自动下载 Gradle 和依赖项。
+
+## 依赖说明
+
+- **系统托盘**: [ComposeNativeTray](https://github.com/kdroidFilter/ComposeNativeTray) (`io.github.kdroidfilter:composenativetray:0.9.1`) — 跨平台原生托盘，Compose DSL 式菜单，支持 Windows/Linux/macOS。
+- **Compose Multiplatform Desktop**: 使用 JetBrains Compose 插件构建桌面 UI。
 
 ## 项目结构
 

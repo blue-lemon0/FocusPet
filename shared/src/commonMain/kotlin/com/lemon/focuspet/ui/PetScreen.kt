@@ -16,7 +16,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lemon.focuspet.util.DesktopEnv
+import com.lemon.focuspet.model.PetState
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
+
+// Pet state → subtle card tint (Material 50 shades)
+// Pet mood → card tint (Material 50 shades)
+private fun stateColor(state: PetState): Color = when (state) {
+    PetState.HAPPY    -> Color(0xFFE8F5E9)  // fresh green 50
+    PetState.FOCUSING -> Color(0xFFE3F2FD)  // calm blue 50
+    PetState.ANGRY    -> Color(0xFFFFEBEE)  // alert red 50
+    PetState.PLEADING -> Color(0xFFFCE4EC)  // soft pink 50
+    PetState.RESTING  -> Color(0xFFEDE7F6)  // restful purple 50
+}
+
+// Accent colors for controls & labels
+private fun accentColor(state: PetState): Color = when (state) {
+    PetState.HAPPY    -> Color(0xFF43A047)  // green 600
+    PetState.FOCUSING -> Color(0xFF1E88E5)  // blue 600
+    PetState.ANGRY    -> Color(0xFFE53935)  // red 600
+    PetState.PLEADING -> Color(0xFFD81B60)  // pink 600
+    PetState.RESTING  -> Color(0xFF8E24AA)  // purple 600
+}
 
 @Composable
 fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
@@ -56,66 +76,66 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
         Surface(
             modifier = Modifier.size(180.dp),
             shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
-            tonalElevation = 2.dp
+            color = stateColor(viewModel.petState).copy(alpha = 0.95f),
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp,
         ) {
             Column(
                 modifier = Modifier.padding(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
-                // ── Pet emoji ──
                 Text(
                     text = viewModel.petState.emoji,
                     fontSize = 48.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(Modifier.height(4.dp))
 
-                // ── Timer ──
-                val sessionLabel = if (viewModel.isBreak) "休息" else "专注"
                 Text(
                     text = formatTime(viewModel.remainingSeconds),
-                    fontSize = 26.sp,
+                    fontSize = 28.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    letterSpacing = 1.sp,
                 )
                 Text(
-                    text = sessionLabel,
+                    text = if (viewModel.isBreak) "休息" else "专注中",
                     fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = accentColor(viewModel.petState),
+                    fontWeight = FontWeight.Medium,
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                // ── Controls ──
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (viewModel.isRunning) {
-                        SmallButton(onClick = { viewModel.pause() }) {
+                        SmallButton(accent = accentColor(viewModel.petState), onClick = { viewModel.pause() }) {
                             Text("⏸", fontSize = 16.sp)
                         }
                     } else {
-                        SmallButton(onClick = { viewModel.start() }) {
+                        SmallButton(accent = accentColor(viewModel.petState), onClick = { viewModel.start() }) {
                             Text("▶", fontSize = 16.sp)
                         }
                     }
-                    SmallButton(onClick = { viewModel.reset() }) {
+                    SmallButton(accent = accentColor(viewModel.petState), onClick = { viewModel.reset() }) {
                         Text("↺", fontSize = 16.sp)
                     }
                 }
 
                 Spacer(Modifier.height(6.dp))
 
-                // ── Statistics ──
                 Text(
                     text = "🔥 ${viewModel.totalMinutes} 分钟",
                     fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }
@@ -123,12 +143,13 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
 }
 
 @Composable
-private fun SmallButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun SmallButton(accent: Color, onClick: () -> Unit, content: @Composable () -> Unit) {
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        modifier = Modifier.size(34.dp)
+        color = accent.copy(alpha = 0.12f),
+        contentColor = accent,
+        modifier = Modifier.size(34.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
             content()
