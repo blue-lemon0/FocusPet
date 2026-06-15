@@ -1,5 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.composeMultiplatform)
@@ -7,12 +5,12 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.shared)
-
     implementation(compose.desktop.currentOs)
-    implementation(libs.kotlinx.coroutinesSwing)
+    @Suppress("DEPRECATION")
+    implementation(compose.material3)
 
-    implementation(libs.compose.uiToolingPreview)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.swing)
 }
 
 compose.desktop {
@@ -20,8 +18,8 @@ compose.desktop {
         mainClass = "com.lemon.focuspet.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.lemon.focuspet"
+            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
+            packageName = "FocusPet"
             packageVersion = "1.0.0"
         }
     }
