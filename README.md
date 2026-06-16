@@ -35,47 +35,32 @@ $env:JAVA_HOME = "C:\Users\xxx\.jdks\ms-17.0.18"
 
 ## 打包发布
 
-### 打包流程（三步）
-
 ```powershell
-# 1. 编译 + 打 uber JAR（将所有依赖合并为一个 fat JAR）
-.\gradlew.bat :desktopApp:packageUberJarForCurrentOS
-#    → 输出: desktopApp/build/compose/jars/FocusPet-windows-x64-1.0.0.jar
-
-# 2. 裁剪 JRE（只保留应用需要的模块）
-.\gradlew.bat :desktopApp:createRuntimeImage
-#    → 输出: desktopApp/build/compose/tmp/main/runtime/（~73 MB）
-
-# 3. 用 jpackage 打包为便携 EXE（不需要 WiX）
-$jpackage = "$env:USERPROFILE\.jdks\openjdk-24.0.1\bin\jpackage.exe"
-& $jpackage --type app-image `
-    --input desktopApp/build/compose/jars `
-    --main-jar FocusPet-windows-x64-1.0.0.jar `
-    --main-class com.lemon.focuspet.MainKt `
-    --name FocusPet `
-    --dest desktopApp/build/compose/dist `
-    --runtime-image desktopApp/build/compose/tmp/main/runtime `
-    --java-options "-Dfile.encoding=GBK" `
-    --java-options "--enable-native-access=ALL-UNNAMED"
-#    → 输出: desktopApp/build/compose/dist/FocusPet/
+# 一行命令，输出便携 EXE（含内嵌 JRE，双击即可运行，无需安装）
+.\gradlew.bat :desktopApp:packagePortable
+# → desktopApp/build/compose/dist/FocusPet/FocusPet.exe
 ```
 
-### 打包产物结构
+**产物结构：**
 
 ```
 desktopApp/build/compose/dist/FocusPet/
-├── FocusPet.exe                         ← Windows 可执行文件（双击运行）
-├── FocusPet.cfg                         ← 启动配置
-├── .jpackage.xml                        ← jpackage 元信息
-└── app/
-    └── FocusPet-windows-x64-1.0.0.jar   ← fat JAR（主程序 + 全部依赖）
-└── runtime/                             ← 裁剪后的 JRE（内嵌，无需用户安装 JDK）
-    ├── bin/java.exe                     ← Java 运行时入口
-    ├── lib/modules                      ← JDK 模块（~51 MB）
-    └── ...
+├── FocusPet.exe        # 可执行文件，双击启动
+├── FocusPet.cfg        # jpackage 启动配置
+├── app/FocusPet-*.jar  # fat JAR：应用代码 + 全部依赖
+└── runtime/            # 裁剪后的 JRE：内嵌 JDK 模块，用户无需预装 Java
+    ├── bin/java.exe    # Java 运行时入口
+    └── lib/modules     # JDK 模块镜像（~51 MB）
 ```
 
-> **注意**: jpackage 需要 JDK 14+，这里使用 `openjdk-24.0.1`。`--type app-image` 输出便携版（不安装），如果要生成安装包则改用 `--type exe` 或 `--type msi`（需要安装 WiX Toolset 3.11+）。
+**怎么工作的（3 合 1）：**
+| 步骤 | Gradle 任务 | 产出 |
+|------|-------------|------|
+| ① 打 fat JAR | `packageUberJarForCurrentOS` | 将所有依赖（Compose + 托盘 + 协程）合并为一个 JAR |
+| ② 裁剪 JRE | `createRuntimeImage` | 只保留应用实际用到的 JDK 模块，去掉未引用的 |
+| ③ 打包 exe | `jpackage --type app-image` | 将 JAR + JRE 封装为 `FocusPet.exe`，双击直接运行 |
+
+> 如需调整 jpackage 参数（版本号、JVM 参数等），编辑 `desktopApp/build.gradle.kts` 末尾 `packagePortable` 任务。
 
 ## 项目结构
 
