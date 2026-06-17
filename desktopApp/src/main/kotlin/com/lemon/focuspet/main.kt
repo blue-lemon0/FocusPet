@@ -1,10 +1,14 @@
 package com.lemon.focuspet
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.kdroid.composetray.menu.api.*
@@ -74,6 +78,14 @@ fun main() = application {
             })
         }
 
-        PetScreen(viewModel, env)
+        Box(
+            Modifier.fillMaxSize().onPreviewKeyEvent {
+                if (it.key == Key.Escape && it.type == KeyEventType.KeyUp) {
+                    isWindowVisible = false; true
+                } else false
+            }
+        ) {
+            PetScreen(viewModel, env)
+        }
     }
 }
