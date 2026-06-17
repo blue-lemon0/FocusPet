@@ -39,7 +39,7 @@ private fun accentColor(state: PetState): Color = when (state) {
 }
 
 @Composable
-fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
+fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv, onHideRequest: (() -> Unit)? = null) {
     // Use absolute mouse coordinates to avoid delta accumulation jitter
     var dragOriginMouseX by remember { mutableIntStateOf(0) }
     var dragOriginMouseY by remember { mutableIntStateOf(0) }
@@ -74,7 +74,7 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
         contentAlignment = Alignment.Center
     ) {
         Surface(
-            modifier = Modifier.size(180.dp),
+            modifier = Modifier.size(200.dp),
             shape = MaterialTheme.shapes.extraLarge,
             color = stateColor(viewModel.petState).copy(alpha = 0.95f),
             tonalElevation = 2.dp,
@@ -85,17 +85,25 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
+                if (onHideRequest != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        HideButton(accent = accentColor(viewModel.petState), onClick = onHideRequest)
+                    }
+                }
                 Text(
                     text = viewModel.petState.emoji,
-                    fontSize = 48.sp,
+                    fontSize = 40.sp,
                     textAlign = TextAlign.Center,
                 )
 
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(2.dp))
 
                 Text(
                     text = formatTime(viewModel.remainingSeconds),
-                    fontSize = 28.sp,
+                    fontSize = 24.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -109,7 +117,7 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
                     fontWeight = FontWeight.Medium,
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -129,7 +137,7 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
                     }
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(4.dp))
 
                 Text(
                     text = "🔥 ${viewModel.totalMinutes} 分钟",
@@ -138,6 +146,21 @@ fun PetScreen(viewModel: PomodoroViewModel, env: DesktopEnv) {
                     fontWeight = FontWeight.Medium,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun HideButton(accent: Color, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = accent.copy(alpha = 0.08f),
+        contentColor = accent.copy(alpha = 0.6f),
+        modifier = Modifier.size(20.dp),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text("─", fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

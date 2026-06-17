@@ -1,14 +1,10 @@
 package com.lemon.focuspet
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.kdroid.composetray.menu.api.*
@@ -17,6 +13,7 @@ import com.lemon.focuspet.ui.PetScreen
 import com.lemon.focuspet.util.DesktopEnvJvm
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
 import java.awt.Toolkit
+import java.awt.event.KeyEvent
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 
@@ -64,6 +61,7 @@ fun main() = application {
         val awtWindow = this.window
         val env = remember { DesktopEnvJvm(awtWindow) }
 
+        // On first show: position to screen bottom-right, and register Esc → hide
         LaunchedEffect(Unit) {
             val gc = awtWindow.graphicsConfiguration
             val bounds = gc.bounds
@@ -78,14 +76,6 @@ fun main() = application {
             })
         }
 
-        Box(
-            Modifier.fillMaxSize().onPreviewKeyEvent {
-                if (it.key == Key.Escape && it.type == KeyEventType.KeyUp) {
-                    isWindowVisible = false; true
-                } else false
-            }
-        ) {
-            PetScreen(viewModel, env)
-        }
+        PetScreen(viewModel, env, onHideRequest = { isWindowVisible = false })
     }
 }
