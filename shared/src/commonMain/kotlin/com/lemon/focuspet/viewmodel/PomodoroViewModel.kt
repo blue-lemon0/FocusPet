@@ -21,10 +21,6 @@ class PomodoroViewModel {
     var petState by mutableStateOf(PetState.HAPPY)
         private set
 
-    // ── Focus tracking ──
-    var focusLostSince by mutableStateOf<Long?>(null)
-        private set
-
     // ── Statistics ──
     var totalMinutes by mutableStateOf(0)
         private set
@@ -35,7 +31,6 @@ class PomodoroViewModel {
     companion object {
         const val FOCUS_TIME = 25 * 60
         const val BREAK_TIME = 5 * 60
-        private const val ANGRY_THRESHOLD_MS = 5_000L
     }
 
     // ── Public API ──
@@ -86,31 +81,14 @@ class PomodoroViewModel {
         isBreak = false
         remainingSeconds = FOCUS_TIME
         petState = PetState.HAPPY
-        focusLostSince = null
-    }
-
-    // ── Focus callbacks ──
-
-    fun onFocusGained() {
-        focusLostSince = null
-        if (isRunning) updatePetState()
-    }
-
-    fun onFocusLost() {
-        if (isRunning) {
-            focusLostSince = currentTimeMillis()
-        }
     }
 
     // ── Internal ──
 
     private fun updatePetState() {
-        val lostSince = focusLostSince
         petState = when {
             isBreak -> PetState.RESTING
             !isRunning -> PetState.HAPPY
-            lostSince != null
-                    && currentTimeMillis() - lostSince > ANGRY_THRESHOLD_MS -> PetState.ANGRY
             remainingSeconds < 60 -> PetState.PLEADING
             else -> PetState.FOCUSING
         }

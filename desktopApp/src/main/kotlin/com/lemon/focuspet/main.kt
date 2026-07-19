@@ -13,9 +13,6 @@ import com.lemon.focuspet.ui.PetScreen
 import com.lemon.focuspet.util.DesktopEnvJvm
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
 import java.awt.Toolkit
-import java.awt.event.KeyEvent
-import java.awt.event.WindowEvent
-import java.awt.event.WindowFocusListener
 
 fun main() = application {
     val viewModel = remember { PomodoroViewModel() }
@@ -47,7 +44,7 @@ fun main() = application {
     )
 
     // ── Pet window ──
-    val windowState = rememberWindowState(width = 200.dp, height = 200.dp)
+    val windowState = rememberWindowState(width = 260.dp, height = 310.dp)
     Window(
         onCloseRequest = { isWindowVisible = false },
         visible = isWindowVisible,
@@ -69,11 +66,6 @@ fun main() = application {
             val x = (bounds.x + insets.left + bounds.width - insets.left - insets.right - 230).coerceAtLeast(0)
             val y = (bounds.y + insets.top + bounds.height - insets.top - insets.bottom - 230).coerceAtLeast(0)
             awtWindow.setLocation(x, y)
-
-            awtWindow.addWindowFocusListener(object : WindowFocusListener {
-                override fun windowGainedFocus(e: WindowEvent?) { viewModel.onFocusGained() }
-                override fun windowLostFocus(e: WindowEvent?) { viewModel.onFocusLost() }
-            })
         }
 
         PetScreen(viewModel, env, onHideRequest = { isWindowVisible = false })
