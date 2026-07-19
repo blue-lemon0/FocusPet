@@ -8,12 +8,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.lemon.focuspet.model.PetState
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 internal fun stateColor(state: PetState): Color = when (state) {
     PetState.NEUTRAL  -> Color(0xFFF5F5F5)
@@ -41,25 +44,37 @@ fun PetAvatar(
     modifier: Modifier = Modifier,
     overlay: @Composable () -> Unit = {},
 ) {
-    val sprites = remember {
-        PetState.entries.associateWith { SpriteLoader.load(it) }
-    }
-    val frameData = remember(sprites) {
-        sprites.mapValues { (_, sheet) -> sheet?.frames ?: emptyList() }
-    }
+    var ready by remember { mutableStateOf(false) }
+    var frameData by remember { mutableStateOf(emptyMap<PetState, List<ImageBitmap?>>()) }
     val queue = remember { FrameQueue() }
 
-    LaunchedEffect(frameData) {
-        queue.initialize(frameData, start = PetState.HAPPY)
-    }
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(300)
-            queue.advance()
+        val loaded = withContext(Dispatchers.Default) {
+            PetState.entries.associateWith { SpriteLoader.load(it) }
+        }
+        frameData = loaded.mapValues { (_, sheet) -> sheet?.frames ?: emptyList() }
+        ready = true
+    }
+
+    LaunchedEffect(ready) {
+        if (ready) {
+            queue.initialize(frameData, start = PetState.HAPPY)
         }
     }
-    LaunchedEffect(state) {
-        queue.scheduleTransition(state)
+
+    LaunchedEffect(ready) {
+        if (ready) {
+            while (true) {
+                delay(300)
+                queue.advance()
+            }
+        }
+    }
+
+    LaunchedEffect(state, ready) {
+        if (ready) {
+            queue.scheduleTransition(state)
+        }
     }
 
     Box(
@@ -70,7 +85,9 @@ fun PetAvatar(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
         ) {
-            overlay()
+            if (ready) {
+                overlay()
+            }
         }
 
         Box(

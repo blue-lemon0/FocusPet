@@ -4,12 +4,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import com.lemon.focuspet.model.PetState
 import org.jetbrains.skia.Image
-import java.awt.RenderingHints
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.net.URL
-import javax.imageio.ImageIO
 
 actual object SpriteLoader {
 
@@ -37,7 +32,7 @@ actual object SpriteLoader {
         val frames = selected.mapNotNull { url ->
             try {
                 val bytes = url.readBytes()
-                decode(bytes, maxSize)
+                Image.makeFromEncoded(bytes).toComposeImageBitmap()
             } catch (_: Exception) { null }
         }
 
@@ -45,14 +40,7 @@ actual object SpriteLoader {
         return SpriteSheet(frames, fps, loop)
     }
 
-    /**
-     * 找到所有帧图片的 URL，不依赖循环扫描。
-     * - 先找第一个存在的帧（最多几十次 getResource）
-     * - file: 协议 → 直接列目录
-     * - jar: 协议 → 用 JarFile 列出 JAR 内所有条目
-     */
     private fun listFrameUrls(dirName: String): List<URL>? {
-        // find first existing frame to determine protocol & location
         var firstUrl: URL? = null
         for (i in 1..9999) {
             val path = "/sprites/$dirName/frame_${"%04d".format(i)}.png"
@@ -89,8 +77,8 @@ actual object SpriteLoader {
         val jarUrlBase = conn.jarFileURL.toString()
         val entryPrefix = conn.entryName.substringBeforeLast("/") + "/"
 
-        val entries = jarFile.entries()
         val matched = mutableListOf<URL>()
+        val entries = jarFile.entries()
         while (entries.hasMoreElements()) {
             val entry = entries.nextElement()
             if (entry.name.startsWith(entryPrefix) && entry.name.endsWith(".png")) {
@@ -104,31 +92,5 @@ actual object SpriteLoader {
             name.removePrefix("frame_").toIntOrNull() ?: 0
         }
         return matched.ifEmpty { null }
-    }
-
-    private fun decode(bytes: ByteArray, maxSize: Int): ImageBitmap {
-        val skiaImage = Image.makeFromEncoded(bytes)
-        if (maxSize <= 0) return skiaImage.toComposeImageBitmap()
-
-        val w = skiaImage.width
-        val h = skiaImage.height
-        val scale = minOf(1f, maxSize.toFloat() / maxOf(w, h))
-        if (scale >= 1f) return skiaImage.toComposeImageBitmap()
-
-        // Downscale with AWT bilinear
-        val src = ImageIO.read(ByteArrayInputStream(bytes))
-            ?: return skiaImage.toComposeImageBitmap()
-
-        val dw = (w * scale).toInt()
-        val dh = (h * scale).toInt()
-        val dst = BufferedImage(dw, dh, BufferedImage.TYPE_INT_ARGB)
-        val g = dst.createGraphics()
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-        g.drawImage(src, 0, 0, dw, dh, null)
-        g.dispose()
-
-        val out = ByteArrayOutputStream()
-        ImageIO.write(dst, "PNG", out)
-        return Image.makeFromEncoded(out.toByteArray()).toComposeImageBitmap()
     }
 }
