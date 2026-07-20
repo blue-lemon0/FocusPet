@@ -1,10 +1,8 @@
 package com.lemon.focuspet
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.kdroid.composetray.menu.api.*
@@ -13,6 +11,7 @@ import com.lemon.focuspet.ui.PetScreen
 import com.lemon.focuspet.util.DesktopEnvJvm
 import com.lemon.focuspet.viewmodel.PomodoroViewModel
 import java.awt.Toolkit
+import org.jetbrains.skia.Image
 
 fun main() = application {
     val viewModel = remember { PomodoroViewModel() }
@@ -23,18 +22,15 @@ fun main() = application {
         onDispose { viewModel.dispose() }
     }
 
-    // ── System tray (ComposeNativeTray) ──
-    val icon = remember {
-        object : Painter() {
-            override val intrinsicSize = Size(16f, 16f)
-            override fun DrawScope.onDraw() {
-                drawCircle(Color(0x22, 0x88, 0x22))
-            }
-        }
+    val appIcon = remember {
+        val bytes = object {}.javaClass.getResource("/icons/tray.png")?.readBytes()
+            ?: error("tray.png not found")
+        BitmapPainter(Image.makeFromEncoded(bytes).toComposeImageBitmap())
     }
 
+    // ── System tray ──
     Tray(
-        icon = icon,
+        icon = appIcon,
         tooltip = "FocusPet",
         primaryAction = { isWindowVisible = !isWindowVisible },
         menuContent = {
@@ -54,6 +50,7 @@ fun main() = application {
         alwaysOnTop = true,
         resizable = false,
         title = "FocusPet",
+        icon = appIcon,
     ) {
         val awtWindow = this.window
         val env = remember { DesktopEnvJvm(awtWindow) }

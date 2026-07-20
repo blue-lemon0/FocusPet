@@ -22,6 +22,10 @@ compose.desktop {
             packageName = "FocusPet"
             packageVersion = "1.0.0"
             modules("java.base")
+
+            windows {
+                iconFile.set(rootProject.projectDir.resolve("shared/src/jvmMain/resources/icons/icon.ico"))
+            }
         }
     }
 }
@@ -46,21 +50,59 @@ tasks.register<Exec>("packagePortable") {
     val jarName = "FocusPet-windows-x64-1.0.0.jar"
     val runtimeDir = layout.buildDirectory.dir("compose/tmp/main/runtime")
     val outDir = layout.buildDirectory.dir("compose/dist")
+    val iconFile = rootProject.projectDir.resolve("shared/src/jvmMain/resources/icons/icon.ico")
 
     inputs.dir(jarDir)
     inputs.dir(runtimeDir)
+    inputs.file(iconFile)
     outputs.dir(outDir)
 
     commandLine(
         jpackage.absolutePath,
-        "--type", "app-image",                 // 便携版文件夹（非安装包）
+        "--type", "app-image",
         "--input", jarDir.get().asFile.absolutePath,
-        "--main-jar", jarName,                 // 上一步产出的 fat JAR
+        "--main-jar", jarName,
         "--main-class", "com.lemon.focuspet.MainKt",
         "--name", "FocusPet",
         "--dest", outDir.get().asFile.absolutePath,
-        "--runtime-image", runtimeDir.get().asFile.absolutePath, // 裁剪后的 JRE
+        "--runtime-image", runtimeDir.get().asFile.absolutePath,
         "--java-options", "-Dfile.encoding=GBK",
-        "--java-options", "--enable-native-access=ALL-UNNAMED",  // 去掉 JDK 24 警告
+        "--java-options", "--enable-native-access=ALL-UNNAMED",
     )
+}
+
+// ── patchIcon：修正 EXE 图标 ──────────────────────────
+// jpackage --type app-image 的 --icon 参数在 Windows 上有 bug，
+// 生成的 EXE 图标仍是默认 Java 图标。此处用 Windows API
+// UpdateResourceW 重新写入 RT_GROUP_ICON + RT_ICON 资源。
+// ───────────────────────────────────────────────────────
+val pythonExec = "python"
+val patchScript = rootProject.projectDir.resolve("patch_icon.py")
+val icoFile = rootProject.projectDir.resolve("shared/src/jvmMain/resources/icons/icon.ico")
+
+tasks.register("patchIcon") {
+    dependsOn("packagePortable")
+    val exe = layout.buildDirectory.file("compose/dist/FocusPet/FocusPet.exe")
+    inputs.file(icoFile)
+    outputs.file(exe)
+
+    doLast {
+        // jpackage creates the exe with ReadOnly attribute;
+        // remove it first so UpdateResourceW can write.
+        exe.get().asFile.setWritable(true)
+
+        exec {
+            commandLine(
+                pythonExec,
+                patchScript.absolutePath,
+                exe.get().asFile.absolutePath,
+                icoFile.absolutePath,
+            )
+        }
+    }
+}
+
+// 默认打便携版一步到位
+tasks.named("packagePortable") {
+    finalizedBy("patchIcon")
 }
