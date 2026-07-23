@@ -87,18 +87,11 @@ tasks.register("patchIcon") {
     outputs.file(exe)
 
     doLast {
-        // jpackage creates the exe with ReadOnly attribute;
-        // remove it first so UpdateResourceW can write.
-        exe.get().asFile.setWritable(true)
-
-        exec {
-            commandLine(
-                pythonExec,
-                patchScript.absolutePath,
-                exe.get().asFile.absolutePath,
-                icoFile.absolutePath,
-            )
-        }
+        val e = exe.get().asFile.absolutePath
+        val i = icoFile.absolutePath
+        Runtime.getRuntime().exec(arrayOf("cmd", "/c",
+            "attrib -R \"" + e + "\" && python \"" + patchScript.absolutePath + "\" \"" + e + "\" \"" + i + "\""
+        )).waitFor()
     }
 }
 
